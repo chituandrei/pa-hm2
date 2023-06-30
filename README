@@ -1,0 +1,148 @@
+Tema 2 PA
+Chitu Andrei Alexandru 321 CC
+
+Timp efectuare : 12 ore
+Dificultate : Medie pentru 1,2,4 grea pentru 3
+
+
+Problema 1 - supercomputer :
+
+Rezolvare : 
+
+adj -> retinem in adj toate dependentele spre exemplu daca avem 1 -> 2 ca dependenta adica taskul 1 trebuie sa se
+termine inaintea taskului 2 retinem in adj[1][0] 2, si tot asa.
+
+count -> in count retinem cate dependente are fiecare task
+
+thread ->  practic un task i poate rula or pe thread[i] care e 1 ,ori pe thread[i] care e 2 deci retin fiecare task pe ce 
+"thread" ruleaza
+Retin in variabila ok daca exista 2 tipuri de threaduri sau daca exista unul singur. Daca exista un singur
+tip de thread spre ex toate sunt 1 sau toate sunt 2 afisez 0, toate ruleaza unul dupa altul nu fac nici un switch
+deci nu mai continui
+
+Daca am doua tipuri diferite de threaduri, atunci continui programul si parcurg numarul de dependente de la 1 pana la M.
+Citesc x si y, unde adaug in adj asa cum am explicat mai sus, cresc numarul de dependente pe care il are y si retin in count.
+
+Parcurg toate taskurile date si adaug in coada toate taskurile care nu au nici o dependenta. Adica ele nu trebuie sa ruleze
+dupa alte taskuri. Tinand cont ca mai devreme am incrementat si retinut in count dependentele lui y, practic y trebuia sa se
+execute dupa ce incepea x, astfel daca count[y] == 0, inseamna ca taskul meu y nu are nevoie sa se termine nici-un task pentru a se rula.
+
+Apelez functia solve care are ca parametrii N, numarul de taskuri, M numarul de dependente, thread(fiecare task pe ce thread ruleaza)
+adj(in adj[x] se retin toate dependentele pe care le are x adica toate taskurile care trebuie sa l astepte), count explicat mai sus,
+si coada in care abia am adaugat taskurile ce nu aveau dependente.
+
+Cat timp coada nu e goala(nu am assignat toate taskurile) iau task-ul care stiu ca n-are dependenta din coada, ii parcurg toate taskurile 
+care depind de el. Scot variabila dependent_task care este practic y-ul de mai sus(adica taskul care depinde de x).
+Acum caut sa il pun intr-o pozitie, deci ii scad dependentele pe care le are. Iau variabila costa, care este 1 in cazul in care
+task si dependent_task trebuie sa ruleze pe threaduri diferite deoarece ma costa 1 acest context switch. Actualizez costul in taskul 
+ce era dependent(in vectorul result), vreau sa iau maximul pentru ca am fost obligat sa fac acele context switchuri si in acelasi timp
+retin si in sol solutia. Daca taskul nu mai are dependente il adaug in coada pentru a fi assignat la iteratiile urmatoare.
+
+Complexitate spatiala : O (N + M)
+Complexitate temporala : O (N + M)
+
+Problema 2 - ferate 
+
+Rezolvare :
+
+Trebuie sa gasim numarul minim de muchii ce trebuie adaugate astfel incat sa ajungem de la nod de start la toate nodurile.
+Daca am duce muchie de la nodul de start la toate nodurile care nu sunt atinse de el, am observa ca toate muchiile care
+nu sunt necesare sunt acelea duse la componentele tari conexe. Astfel avem de cautat toate componentele tari conexe din graf
+Daca le eliminam si le privim ca un alt nod spre exemplu 1->2 2->3 3->1 il privin ca nodul 0, observam ca trebuie sa ducem
+o singura muchie de la start la el. Problema apare atunci cand doua componente tari conexe sunt deja interconectate, deci
+nu mai trebuie sa duc muchie de la start si la cea de a doua componenta conex, trebuie sa duc doar la prima deoarece prin prima
+componenta conexa pot ajunge si la a doua. Excluzand toate componentele conexe din graf, observ ca raman cu un graf aciclic, asta 
+inseamna ca daca un nod diferit de cel de start are gradul de intrare a muchiilor > 0 el este deja interconectat.
+
+Folosim 5 vectori : adj, unde in adj[1] se retin toate muchiile 1->y, adj reverse unde retinem toate muchiile inverse adica
+daca aveam muchie de la 1 la y vom retine in adj reverse muchia de la y la 1 pentru a aplica algoritmul Kosaraju (determinarea
+tuturor componentelor tari conexe). In grad vom retine gradul noilor "noduri" dupa ce inlocuim componentele tari conexe, iar in
+comp_conexa retinem fiecare nod din ce componenta conexa face parte. Pentru exemplul de mai sus cu 1->2 2->3 3->1 retinem pot
+comp_conexa[1] =1, comp_conexa[2] =2 , comp_conexa[3] =3.
+
+Aplicam DFS pe fiecare nod, iar la final bagam in stack nodul la care DFS ul se opreste. Reinitializez vecotrul de viz, iar acum 
+aplic DFS pe fiecare nod din stiva. Scot un nod aplic DFS, doar ca aplic pentru adj_reverse. Astfel observ daca acel nod face sau nu
+parte dintr-o componenta tare conexa, si o determin pe aceasta. Pe langa mai imi iau un vector sol, care se modifica si adauga toate 
+nodurile unei componente conexe. Recapituland avem 2 DFS-uri, DFS1, adauga in stack nodul la care ajunge ca sa facem Kosjaru
+iar DFS2 adauga in sol nodurile unei componente conexe.
+
+Avem o variabila change care ne spune daca nodul de start se afla in acea componenta conexa. Initializam toate nodurile din
+componenta conexa ca fiind comp_conexa[sol[0]] adica sol[0] e primul nod al componentei conexe deci le marcam pe toate ca
+fiind acelasi nod. In cazul in care change era 1 , reinitilizez toate nodurile din componenta conexa cu eticheta start
+deoarece vreau sa sar peste ea cand iterez sa gasesc solutia, pentru ca daca am 2 comp conexe care nu se ating si un nod start
+izolat, trebuie sa duc 2 muchii, deci o sa iau in calcul doar componentele conexe, cu startul n am treaba.
+
+Urmatorul pas este sa parcurg toate muchiile, iar daca gasesc 2 noduri care au muchie intre ele si nu fac parte din aceeasi componenta
+conexa, gradul interior al nodului y, daca am muchie de la x la y, trebuie sa creasca(eu retin intr un bool ori are muchie 
+componenta conexa legata la ea,ori n are). 
+Acum presupunem ca toate nodurile dintr-o componenta conexa au aceeasi eticheta si sunt acelasi nod. Explicatia pentru asta ar fi ca
+Daca am doua componente conexe diferite, si stiu ca dintr-un nod din prima componenta conexa pleaca o muchie la orice nod
+din a doua componenta conexa, nu voi mai fi nevoit cand leg startul de prima componenta conexa sa il leg si de a doua, ca deja
+am un nod din care pot ajunge(nod care apartine primei componente conexe) in cea de a doua componenta conexa.
+
+Ce mi ramane de facut, e sa vad cate noduri noi(considerate componenta tare conexa) au gradul 0, deoarece la ele trebuie sa trag 
+muchie. Deci conditia este daca grad[i] == false, adica nu e legata nici o muchie din exterior la nici un nod din componenta
+noastra conexa, comp_conexa[i] == i adica iau o singura data eticheta componentei conexe i si i!= start, deci nu bag in seama startul
+cresc solutia si afisez.
+
+Complexitate spatiala : O(N + M) pt vectorul adj
+Complexitate temporala : 2 * O(N + M) pt Kosjaru si cateva O(N) deci ramane O(N+M)
+
+Problema 3 teleportare:
+Am facut un simplu dijkstra care nu tine cont de muchiile de teleportare. Am creeat o coada de prioritati
+in care adaug fiecare nod adiacent nodului curent pe care l verific, dupa vad daca in vectorul de distante
+este o solutie mai buna sa aleg aceasta muchie sau nu. In final din vectorul de distante returnez distanta[n]
+Complexitate spatiala : O (2 * n) pt vectorul de pair = O (n)
+Complexitate temporala :O(n+m) * O(log n)
+
+Problema 4 magazin :
+
+Problema magazin trebuie sa determine practic, daca parcurg x pasi de dfs de la un nod de start
+la ce nod ajung. Astfel o abordare simpla ar fi sa faci DFS din fiecare nod, dar ineficienta.
+Practic in mare, rezolvarea problemei consta in retinerea pentru fiecare nod parcurs in cadrul
+unui singur dfs, timpul de pornire(adica spre exemplu daca plec de la radacina 0) si timpul de sosire
+daca este un graf conex am timpul de sosire maxim, astfe, pot determina cate noduri mai pot fi parcurse
+Spre exemplu : avem 1->2 2->3 3->4 4->5 un lant, pornim un dfs din nodul 1. Numaram cat am parcurs inainte
+adica 0. Numaram cat vom parcurge, adica 2,3,4,5 aici se opreste dfs ul ca dfs(5) n are vecini. Deci
+rezultatul va fi 4 - 0 = 4. Numaram pentru 2. Stim ca dfs(2) porneste dupa fix un pas. Deci avem 
+inceput = 1, numaram iar 3,4,5 dfs(5) se opreste deci vom avea 4-1 = 3 muchii. Sper ca am explicat bine.
+
+Revenind la cod am urmatorii vectori :
+adj ca la celelalte probleme matricea de adiacenta retinuta intr-un vector deci nu e matrice
+dp unde construiesc final - inceput cum am facut mai sus in exemplu(n aveam nevoie neaparata de el)
+apr si ret -> sunt 2 vectori asociati. Ret retine practic toata calea dfs-ului de la nodul de plecare
+pana cand se termina, iar apr retine pozitia fiecarui nod in dfs. Adica ret va avea pt exemplu de mai sus
+1,2,3,4,5 ca asa se parcurg, iar apr retine in apr[1] ca nodul 1 se afla pe pozitia 1, apr[2] ca nodul
+2 se afla pe pozitia 2 etc.
+viz e vectorul de vizitati pt dfs ca sa nu parcurg acelasi nod de 10 ori
+pre si post sunt vectorii care retin inceputul si finalul unui nod intr-un dfs
+
+Fac citirea practic citesc parintele fiecarui nod stiind ca 1 e radacina plec de la 2 citesc parintele
+si adaug muchia dintre parinte->copil.
+
+Fac un DFS normal doar ca iau o variabila globala timp care la inceput e 0 deci pre[1(care e radacina)]
+= 0 dupa care la fiecare dfs o incrementez si post[nodul la care ma aflu] = timp. Exact cum am explicat mai
+sus. Deci fac chestia asta liniar adica parcurg 1 incrementez stiu ca 2 e vecin cu 1 dar are deja 1 parcurs
+deci stiu cate poate parcurge (timp de intrare si timp de iesire din dfs).
+
+Formez vectorul ret in interiorul dfs-ului, e exact vectorul din enunt, deoarece se parcurge nodul
+dupa toti vecinii lui dupa urmatorul si tot asa.
+
+Calculez dp[i] care va fi timpul de iesire al nodului i minus timpul de intrare al nodului i.
+Acum in dp[i] retin practic cat are voie i sa mearga sa transporte. Daca i are voie 3 si inputul este
+i 7 (start la i cu 7 pasi) se afiseaza -1.
+
+Formez apr[i] simplu, parcurgand ret[i]. Fac asta ca sa nu parcurg pentru fiecare intrebare vectorul
+ret, ar fi ineficient.
+Apoi citesc intrebarea, deci am start si step.
+Am 3 cazuri posibile:
+1. ies din vector (spre exemplu imi cere sa ma duc de la un nod inca 100 si eu n am atata dimensiune in
+vector deci returnez -1 )
+2. step > dp[start], mi se cere sa fac mai multi pasi decat imi permite nodul de la care plec
+afisez -1
+3.afisez elementul de pe pozitia step + pozitia startului -1 pentru ca ret e indexat de la 0.
+
+Complexitate spatila : Toti vectorii au lungimea n inclusiv adj ca aveam n-1 muchii. Deci O (n)
+Complexitate temporala : ar fi pt dfs ori O ( n + n ) ori O ( 5 * n) mai bine spus deoarece
+alea sunt intrebarile. Deci ramanem cu O(n)
+
